@@ -4,14 +4,17 @@ import os
 
 USERNAME = re.compile(r'^\w{2,9}$')
 
-BANNER = """   ______        __
+BANNER = """ W e l c o m e   t o
+
+   ______        __
   / ____ \ ___  / /__________  _____
  / / __ `// _ \/ __/ ___/ __ \/ ___/
 / / / / //  __/ /_(__  ) /_/ / /__
 \/_/ /_/ \___/\__/____/\____/\___/
  \____/
 
-    F r e s h e r s ' 2 0 1 6
+           F r e s h e r s ' 2 0 1 6
+
 """
 def is_valid_username(attempt):
     matched = USERNAME.match(attempt)
