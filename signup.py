@@ -1,8 +1,9 @@
 import json
 import re
 import os
+import time
 
-USERNAME = re.compile(r'^\w{2,9}$')
+from collections import OrderedDict
 
 BANNER = """ W e l c o m e   t o
 
@@ -16,90 +17,97 @@ BANNER = """ W e l c o m e   t o
            F r e s h e r s ' 2 0 1 6
 
 """
-def is_valid_username(attempt):
-    matched = USERNAME.match(attempt)
-    return matched is not None
-
-
-def taken(username):
-    users = ['al']
-    return username in users
-
-
-def is_valid_email(attempt):
-    if '@' not in attempt:
-        print('I think an email address has an @ in it')
-        return False
-    else:
-        return True
 
 def yes_no(prompt):
-    print(prompt, end='')
-    response_input = ''
-    while response_input not in ['Y', 'N']:
-        response_input = input('[Y/N]: ')
-    return response_input == 'Y'
+    answers = {
+            'yes': True, 'y': True,
+            'no': False, 'n': False
+    }
+
+    text = ''
+    print(prompt)
+    while not text.lower() in answers:
+        text = input(' [y/n] >> ')
+
+    return answers[text.lower()]
 
 
-def get_username():
-    while True:
-        attempt = input('your "real" name: ')
-        if is_valid_username(attempt):
-            username = attempt
-            if not taken(attempt):
-                recurring = False
-                break
-            else:
-
-                recurring = yes_no('We already have {name}, are you {name}? '
-                                    .format(name=username))
-                if recurring:
-                    break
-                else:
-                    print("Sure we'll give it another go")
-                    continue
-        else:
-            print('Nah, username must be 2-9 resonable characters')
-    return username, recurring
-
-
-def get_email():
-    while True:
-        attempt = input('your email address is: ')
-        if '@' in attempt:
-            return attempt
-        else:
-            print("Fairly sure an email address has '@' in it somewhere")
+def get_email(prompt):
+    text = input(prompt)
+    while '@' not in text:
+        print(' "An email address typically has an `@` in it..."')
+        text = input('       >> ')
+    return text
 
 
 def get_user_details():
-    username, recurring = get_username()
-    email = get_email()
-    return dict(zip(('username', 'email', 'recurring'),
-                    (username, email, recurring)))
+    user = OrderedDict()
+
+    prompts = (
+        ("What's your name?\n       >> ",
+         'name',
+         input),
+
+        ("What's your email address?\n       >> ",
+          'email',
+          get_email),
+
+        ("Are you already a member?",
+         'renewing',
+          yes_no),
+
+        ("Do you want to subscribe to our jobs & internships mailing list?",
+         'jobseeker',
+          yes_no),
+    )
+
+    for prompt_text, key, input_func in prompts:
+        response = input_func(prompt_text)
+        user[key] = response
+
+    return user
+
+
+def fmt_details(user):
+    l = 60
+    details = ('           Name: {name}\n'
+               '  Email address: {email}'
+               .format(name=user['name'], email=user['email']))
+    jobseeker_text = ("  You{}want to receive job & internship emails"
+                      .format(' ' if user['jobseeker'] else " don't "))
+
+    renewing_text = ("  You are renewing your membership\n" if user['renewing']
+                     else "  You are not already a member\n")
+
+    return ("So, to confirm:\n\n" +
+            ("#" * l) + '\n' +
+            details + '\n\n' +
+            jobseeker_text + '\n' +
+            renewing_text +
+            ("#" * l) + '\n')
+
+
 
 
 def signups():
     while True:
         os.system('clear')
         print(BANNER)
-        details = get_user_details()
+        user = get_user_details()
 
-        print('\nSo, to be clear:\n'
-              ' username: {}\n'
-              ' email   : {}'
-              .format(details['username'], details['email']))
+        time.sleep(0.125)
+        print('\n')
+        print(fmt_details(user))
+        valid = yes_no("Are **all** of these details correct?")
 
-        if details['recurring']:
-            print("\nAnd you\'re already a member?")
-
-        good = yes_no('\nThis is correct? ')
-        if good:
-            print("Welcome aboard!" if not details['recurring'] else
-                  "Welcome back!")
-            input()
+        if valid:
+            sure = yes_no("Are you **sure**?\n(We can't contact you if your email is wrong!!)")
+            if sure:
+                print(json.dumps(user))
+                input()
         else:
             continue
+
 
 
 if __name__ == '__main__':
