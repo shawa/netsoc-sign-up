@@ -1,8 +1,6 @@
 import json
-import re
 import os
-import time
-
+import datetime
 from collections import OrderedDict
 
 BANNER = """ W e l c o m e   t o
@@ -33,10 +31,20 @@ def yes_no(prompt):
 
 
 def get_email(prompt):
-    text = input(prompt)
-    while '@' not in text:
-        print(' "An email address typically has an `@` in it..."')
-        text = input('       >> ')
+    while True:
+        text = input(prompt)
+        while '@' not in text:
+            print(' "An email address typically has an `@` in it..."')
+            text = input('       >> ')
+
+        confirmed = input(" Enter your email again there, just to confirm."
+                          "\n       >> ")
+
+        if confirmed != text:
+            print("       Entries do not match!\n")
+        else:
+            break
+
     return text
 
 
@@ -87,28 +95,58 @@ def fmt_details(user):
             ("#" * l) + '\n')
 
 
+def register_user(users_file, user):
+    with open(users_file, 'r') as f:
+        users = json.load(f)
+
+    users.append(user)
+
+    with open(users_file, 'w') as f:
+        json.dump(users, f)
 
 
-def signups():
+def prep_screen():
+    os.system('clear')
+    print(BANNER)
+
+
+def signups(users_file):
     while True:
-        os.system('clear')
-        print(BANNER)
-        user = get_user_details()
+        try:
+            prep_screen()
+            user = get_user_details()
 
-        time.sleep(0.125)
-        print('\n')
-        print(fmt_details(user))
-        valid = yes_no("Are **all** of these details correct?")
+            print('\n')
+            print(fmt_details(user))
+            valid = yes_no("Are **all** of these details correct?")
 
-        if valid:
-            sure = yes_no("Are you **sure**?\n(We can't contact you if your email is wrong!!)")
-            if sure:
-                print(json.dumps(user))
-                input()
-        else:
+            if valid:
+                sure = yes_no("Are you really **sure**?\n"
+                              "We can't contact you if your email is wrong!!")
+                if sure:
+                    register_user(users_file, user)
+                    input("Welcome, {}!".format(user['name'].split(' ')[0]))
+            else:
+                continue
+        except (KeyboardInterrupt, EOFError):
+            try:
+                kill = input('<')
+                if kill == 'kill':
+                    break
+            except (KeyboardInterrupt, EOFError):
+                continue
             continue
 
+def main():
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+    filename = "freshers_{}.json".format(timestamp)
 
+    if not os.path.isfile(filename):
+        with open(filename, 'w') as f:
+            json.dump([], f)
+
+    signups(filename)
 
 if __name__ == '__main__':
-  signups()
+    main()
+
