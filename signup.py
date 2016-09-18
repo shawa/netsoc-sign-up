@@ -142,9 +142,6 @@ def signups(users_file):
             print(fmt_details(user))
             valid = yes_no("Are **all** of these details correct?")
             if valid:
-                sure = yes_no("\nAre you really **sure**?\n"
-                              "We can't contact you if your email is wrong!!")
-            if sure:
                 register_user(users_file, user)
                 input("Welcome, {}!".format(user['name'].split(' ')[0]))
             else:
