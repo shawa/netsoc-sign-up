@@ -26,18 +26,10 @@ def yes_no(prompt):
 
 
 def get_email(prompt):
-    while True:
-        text = input(prompt)
-        while '@' not in text:
-            print(' An email address typically has an `@` in it...')
-            text = input('       >> ')
-
-        confirmed = input(" Enter your email again there, just to confirm."
-                          "\n       >> ")
-        if confirmed != text:
-            print("       Entries do not match!\n")
-        else:
-            break
+    text = input(prompt)
+    while '@' not in text:
+        print(' An email address typically has an `@` in it...')
+        text = input('       >> ')
     return text
 
 
